@@ -121,7 +121,7 @@ def core_func(sensor_id):
         if row[0] == sensor_id:
             Timestamp.append(row[3])
             Speed.append(row[6])
-    if len(Timestamp) == 0:
+    if len(Timestamp) <= 2:
         return []
 
     Speed = list(map(eval, Speed))
@@ -145,7 +145,7 @@ def core_func(sensor_id):
     dat = list(zip(filter_dura, filter_speed))
     dat = np.array(dat)
 
-    outliers, inliers = lof(dat, k=5, method=2, plot=True)
+    outliers, inliers = lof(dat, k=2, method=2, plot=False)
 
     # pick out outliers according to k distances
     time_list = inliers[0].values.tolist()
@@ -169,8 +169,8 @@ def core_func(sensor_id):
     for ot in out_time:
         for i in range(25):  #25 events
             if ot>=event_st[i] and ot<=event_et[i]:  #time match
-                if sensor_id in Sen_Eve_Dict and Sen_Eve_Dict[sensor_id] == event_id[i]: #location match
-                    ans.append(event_id[i])
+                #if sensor_id in Sen_Eve_Dict and Sen_Eve_Dict[sensor_id] == event_id[i]: #location match
+                ans.append(event_id[i])
 
     return ans
 
