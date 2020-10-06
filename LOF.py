@@ -6,10 +6,12 @@ from sklearn.neighbors import LocalOutlierFactor
 
 
 def LOF(data, predict, k):
+    
     clf = LocalOutlierFactor(n_neighbors=k+1, algorithm='auto', contamination=0.1,n_jobs=-1)
     clf.fit(data)
     predict['k distances'] = clf.kneighbors(predict)[0].max(axis=1)
     predict['local outlier factor'] = -clf._decision_function(predict.iloc[:,:-1])
+    
     return predict
 
 
@@ -145,38 +147,40 @@ def core_func(sensor_id):
     dat = list(zip(filter_dura, filter_speed))
     dat = np.array(dat)
 
-    outliers, inliers = lof(dat, k=2, method=2, plot=False)
+    if len(dat) > 5:
+        outliers, inliers = lof(dat, k=5, method=2, plot=False)
 
-    # pick out outliers according to k distances
-    time_list = inliers[0].values.tolist()
-    k_dis_list = inliers['k distances'].values.tolist()
+        # pick out outliers according to k distances
+        time_list = inliers[0].values.tolist()
+        k_dis_list = inliers['k distances'].values.tolist()
 
-    out_st = 0
-    for i in range(len(k_dis_list)):
-        if i + 1 < len(k_dis_list) and k_dis_list[i + 1] - k_dis_list[i] > 500:
-            out_st = i + 1
-            break
+        out_st = 0
+        for i in range(len(k_dis_list)):
+            if i + 1 < len(k_dis_list) and k_dis_list[i + 1] - k_dis_list[i] > 500:
+                out_st = i + 1
+                break
 
-    #out_k_dis = k_dis_list[out_st:]
-    out_time = time_list[out_st:] # outliers for sensor_id
-    for item in out_time:
-        item += timestamp_to_cnt(st)
-        item = int(item)
+        #out_k_dis = k_dis_list[out_st:]
+        out_time = time_list[out_st:] # outliers for sensor_id
+        for item in out_time:
+            item += timestamp_to_cnt(st)
+            item = int(item)
 
-    print(out_time)
+        print(out_time)
 
-    ans = []
-    for ot in out_time:
-        for i in range(25):  #25 events
-            if ot>=event_st[i] and ot<=event_et[i]:  #time match
-                #if sensor_id in Sen_Eve_Dict and Sen_Eve_Dict[sensor_id] == event_id[i]: #location match
-                ans.append(event_id[i])
+        ans = []
+        for ot in out_time:
+            for i in range(25):  #25 events
+                if ot>=event_st[i] and ot<=event_et[i]:  #time match
+                    if sensor_id in Sen_Eve_Dict and Sen_Eve_Dict[sensor_id] == event_id[i]: #location match
+                        ans.append(event_id[i])
 
-    return ans
+        return ans
 
-    #print(inliers)
-    #plt.scatter(np.array(dat)[:, 0], np.array(dat)[:, 1], s=10, c='b', alpha=0.5)
-    #plt.scatter(outliers[0], outliers[1], s=10 + outliers['local outlier factor'] * 100, c='r', alpha=0.2)
+        #print(inliers)
+        #plt.scatter(np.array(dat)[:, 0], np.array(dat)[:, 1], s=10, c='b', alpha=0.5)
+        #plt.scatter(outliers[0], outliers[1], s=10 + outliers['local outlier factor'] * 100, c='r', alpha=0.2)
+
 
 for s in list_intersection:
     print(core_func(s))
